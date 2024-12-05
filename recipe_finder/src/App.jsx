@@ -1,23 +1,47 @@
-import { useState } from 'react'
+import React, { useState } from "react";
+import SearchBar from "./components/SearchBar";
+import RecipeCard from "./components/RecipeCard";
 
-import './App.css'
+const App = () => {
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-function App() {
-  const [count, setCount] = useState(0);
+  const fetchRecipes = async (query) => {
+    const API_URL = `https://api.edamam.com/search?q=${query}&app_id=YOUR_APP_ID&app_key=YOUR_APP_KEY`;
 
-  const increment = () => {
-    setCount(count + 1);
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(API_URL);
+      const data = await response.json();
+
+      if (data.hits.length === 0) {
+        setError("No recipes found. Try another search!");
+      } else {
+        setRecipes(data.hits);
+      }
+    } catch (err) {
+      setError("Failed to fetch recipes. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <>
-      <div className="App">
-        <h1>Counter App</h1>
-        <p>Current Count: {count}</p>
-        <button onClick={increment}>Increase</button>
+    <div>
+      <h1>Recipe Finder</h1>
+      <SearchBar fetchRecipes={fetchRecipes} />
+      {loading && <p>Loading...</p>}
+      {error && <p>{error}</p>}
+      <div className="recipe-grid">
+        {recipes.map((recipe, index) => (
+          <RecipeCard key={index} recipe={recipe.recipe} />
+        ))}
       </div>
-    </>
+    </div>
   );
-}
+};
 
-export default App
+export default App;
